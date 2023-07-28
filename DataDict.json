@@ -1,0 +1,49 @@
+{
+"Internal":{
+    "train_label":"",
+    "train_path": "",
+    "val_label":"",
+    "val_path":"",
+    "test_label":"",
+    "test_path":"",
+    "cache_path":"",
+    "center_file":"",
+    "doctor_file":"",
+    "modal":["sag PDW","cor PDW","axi PDW","sag T2WI","cor T1WI"]
+},
+"Nanyi":{
+    "test_label":"",
+    "test_path":"",
+    "cache_path":"",
+    "doctor_file":"",
+    "modal":["sag PDW","cor PDW","axi PDW"]
+},
+"Zhujiang":{
+    "test_label":"",
+    "test_path":"",
+    "cache_path":"",
+    "doctor_file":"",
+    "modal":["sag PDW","cor PDW","axi PDW"]
+},
+"ZhongshanPDW":{
+    "test_label":"",
+    "test_path":"",
+    "center_file":"",
+    "cache_path":"",
+    "modal":["sag PDW","cor PDW","axi PDW"]
+},
+"Foshan":{
+    "test_label":"",
+    "test_path":"",
+    "center_file":"",
+    "cache_path":"",
+    "modal":["sag PDW","cor PDW","axi PDW","sag T2WI"]
+},
+"Zhongshan":{
+    "test_label":"",
+    "test_path":"",
+    "center_file":"",
+    "cache_path":"",
+    "modal":["sag PDW","cor PDW","axi PDW","sag T2WI"]
+}
+}
