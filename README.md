@@ -10,5 +10,4 @@ pip install -r requirements.txt
 ```
 
 
-;## Acknowledgements
-;Our codebase is built using multiple opensource contributions, please see [ACKNOWLEDGEMENTS](ACKNOWLEDGEMENTS) for more details. 
+
