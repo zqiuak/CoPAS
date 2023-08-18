@@ -1,0 +1,13 @@
+grad-cam==1.4.6
+numpy
+pandas==2.0.0
+Pillow==9.5.0
+scikit-learn==1.2.2
+scipy==1.10.1
+SimpleITK==2.2.1
+tensorboard==2.13.0
+tensorboardX==2.6
+threadpoolctl==3.1.0
+torch==2.0.1
+torchsample==0.1.0
+torchvision==0.15.2
