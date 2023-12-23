@@ -1,7 +1,7 @@
-# De-COMA: Deep CO-plane and Multi-contrast Attention Learning for Classifying Twelve Knee Abnormalities from Multi-sequence MRI
+# De-COMA: Deep CO-plane and Multi-contrast Attention Learning Model
 This is the official repository of 
 
-**De-COMA: Deep CO-plane and Multi-contrast Attention Learning for Classifying Twelve Knee Abnormalities from Multi-sequence MRI.** 
+**Thinking Like a Radiologist: Advancing Knee MRI Abnormality Diagnosis with Deep Co-plane and Multi-contrast Attention Learning.** 
 *Zelin Qiu, Zhuoyao Xie, Yanwen Li, Huangjing Lin, Qiang Ye, Menghong Wang, Shisi Li, Yinghua Zhao, and Hao Chen*
 
 ## Setup
