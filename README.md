@@ -1,4 +1,4 @@
-#  Deep co-plane Subspace and multi-Contrast Attention Network
+# DeepSCAN: Deep co-plane Subspace and multi-Contrast Attention Network
 This is the official repository of 
 
 **Clinical-knowledge Inspired Deep Attention Learning for Detecting Twelve Types of Knee Abnormalities from Multi-sequence MRIs: A Multi-center Retrospective Study** 
