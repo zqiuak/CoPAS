@@ -32,6 +32,8 @@ Net = model.Multi_view_Knee
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--test', action='store_true', default=False)
+    parser.add_argument('--weight_path', type=str, default='')
     parser.add_argument('--prefix_name', type=str, default=Net.__name__)
     parser.add_argument('--a',type=str,default='')
     parser.add_argument('--augment', type=int, choices=[0, 1], default=1)

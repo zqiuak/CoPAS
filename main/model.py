@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
-from utils import Show_Samples, plot_attmap
+from utils import Show_Samples
 from focal_loss.focal_loss import FocalLoss as FL
 from ResNet3D import generate_model as resnet3D
 from Args import Arguments

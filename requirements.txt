@@ -11,3 +11,4 @@ threadpoolctl==3.1.0
 torch==2.0.1
 torchsample==0.1.0
 torchvision==0.15.2
+focal_loss_torch

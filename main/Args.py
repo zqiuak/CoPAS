@@ -16,7 +16,7 @@ class Arguments():
         
 
         # task_args
-        self.DatasetNameList = ['Internal', "Nanyi", "Zhujiang","Foshan", "Zhongshan", "ZhongshanPDW"]
+        self.DatasetNameList = ['Internal']
         self.DiseaseList = ['MENI', 'ACL', 'CART', 'PCL', 'MCL', 'LCL', 'EFFU', 'CONT', 'PLICA', 'CYST', 'IFP', 'PR']
         self.ViewList = ['Sag', 'Cor', 'Axi']
         self.SequenceList = ["sag PDW","cor PDW","axi PDW","sag T2WI","cor T1WI"]
