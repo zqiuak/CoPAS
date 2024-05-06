@@ -10,7 +10,6 @@ from torchvision import models
 from utils import Show_Samples, plot_attmap
 from focal_loss.focal_loss import FocalLoss as FL
 from ResNet3D import generate_model as resnet3D
-from AsymmetricLoss import AsymmetricLossOptimized
 from Args import Arguments
   
 def ini_weights(module_list:list):
