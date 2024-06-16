@@ -50,7 +50,9 @@ python run.py --test --weight_path PATH_TO_WEIGHT
 ```--augment```: ```bool```, use augmentation or not.<br>
 
 
-If you want to apply for the sample data with label. Please send a email to Zelin Qiu (zqiuak@connect.ust.hk).
+We have prepared 50 sample data for test, click [here](https://drive.google.com/drive/folders/1b7H4zIppkeU2YGFSTMbIKFSDvhNtEMNY?usp=sharing) to download.
+
+If you have any special requests, please send a email to Zelin Qiu (zqiuak@connect.ust.hk).
 
 ## License
 

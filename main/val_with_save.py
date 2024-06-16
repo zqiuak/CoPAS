@@ -6,14 +6,16 @@ import sys
 import numpy as np
 import glob
 from typing import Any
+
 import torch
 from pytorch_grad_cam import GradCAM, LayerCAM, GradCAMElementWise, GradCAMPlusPlus, EigenCAM, FullGrad, EigenGradCAM, GradCAMPlusPlus
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from tensorboardX import SummaryWriter
 
-from utils import Show_Samples
-from train import parse_arguments, evaluate_model
-from dataloader import kneeDataSetSITK
+from run.Args import args
+from run.utils import Show_Samples
+from run.train import evaluate_model
+from data.dataloader import kneeDataSetSITK
 import matplotlib.pyplot as plt
 import warnings
 from pytorch_grad_cam import base_cam
@@ -101,8 +103,8 @@ def show_CAM(net, dataset):
             Show_Samples(input_image, title="task_%d_slice_%d_origin.png"%(task, slice_indx), save_path='./')
         # cam_map.shape()
 
-def val_with_save(args, net):
-    log_root_folder = args.ExpFolder+"Val-{}-{}-{}/".format(args.prefix_name,time.strftime("%m%d-%H%M%S"), args.a)
+def val_with_save(net):
+    log_root_folder = args.log_folder
     if args.flush_history == 1:
         objects = os.listdir(log_root_folder)
         for f in objects:

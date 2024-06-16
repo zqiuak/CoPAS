@@ -7,10 +7,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
-from utils import Show_Samples
 from focal_loss.focal_loss import FocalLoss as FL
-from ResNet3D import generate_model as resnet3D
-from Args import Arguments
+
+from run.utils import Show_Samples
+from run.Args import args
+from model.ResNet3D import generate_model as resnet3D
   
 def ini_weights(module_list:list):
     for m in module_list:
@@ -27,7 +28,7 @@ def ini_weights(module_list:list):
                 nn.init.constant_(m.bias, 0)
 
 class Res_3D_Encoder(nn.Module):
-    def __init__(self, kargs:Arguments, *args,**kwargs) -> None:
+    def __init__(self, kargs = args, **kwargs) -> None:
         super().__init__()
         layer = kargs.model_depth
         if layer == 50:
@@ -55,7 +56,7 @@ class Res_3D_Encoder(nn.Module):
         return x
 
 class Res_2D_Encoder(nn.Module):
-    def __init__(self, kargs:Arguments, *args,**kwargs) -> None:
+    def __init__(self, kargs, *args,**kwargs) -> None:
         raise Exception("This module is deprecated")
         super().__init__()
         self.kargs = kargs
@@ -91,7 +92,7 @@ class Res_2D_Encoder(nn.Module):
         return x
 
 class Eff_2D_Encoder(nn.Module):
-    def __init__(self, kargs:Arguments, *args, **kwargs) -> None:
+    def __init__(self, kargs, *args, **kwargs) -> None:
         raise Exception("This module is deprecated")
         super().__init__(*args, **kwargs)
         self.model = models.efficientnet_v2_s(weights="IMAGENET1K_V1")
@@ -151,7 +152,7 @@ class Co_Plane_Att(nn.Module):
         return f
 
 class Cross_Modal_Att(nn.Module):
-    def __init__(self, feature_channel, kargs:Arguments, *args, **kwargs) -> None:
+    def __init__(self, feature_channel, kargs = args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.transform_matrix = nn.Linear(2*feature_channel, feature_channel)
         self.norm = nn.BatchNorm1d(num_features=feature_channel)
@@ -179,7 +180,7 @@ class Branch_Classifier(nn.Module):
         return self.classifiers(f)
 
 class Multi_view_Knee(nn.Module):
-    def __init__(self, backbone = 'ResNet', encoder_layer = 18, pretrain = True, parallel_device = True, kargs = Arguments()) -> None:
+    def __init__(self, backbone = 'ResNet', encoder_layer = 18, pretrain = True, parallel_device = True, kargs = args) -> None:
         super().__init__()
         self.kargs = kargs
         self.class_num = kargs.ClassNum
@@ -203,8 +204,11 @@ class Multi_view_Knee(nn.Module):
         print('model param = %f MB'%model_param)
 
         if sum(self.branch) == 3:
-            self.save_or_load_encoder_para("load", kargs.pretrain_folder)
-            print('loading pretrained success')
+            try:
+                self.save_or_load_encoder_para("load", kargs.pretrain_folder)
+                print('loading pretrained success')
+            except:
+                print('loading pretrained failed, using random init')
 
     def __make_encoder__(self, backbone_name):
         if backbone_name == 'ResNet':
@@ -501,19 +505,19 @@ class Multi_view_Knee(nn.Module):
         return loss, loss.item()
 
 class Pretrain_Encoder(nn.Module):
-    def __init__(self, backbone = 'ResNet', encoder_layer = 18, pretrain = True, parallel_device = '1', kargs = Arguments()) -> None:
+    def __init__(self, backbone = 'ResNet', encoder_layer = 18, pretrain = True, parallel_device = '1', kargs = args) -> None:
         super().__init__()
         self.kargs = kargs
         self.encoder = Res_3D_Encoder(kargs)
         self.classifier = Branch_Classifier(12, self.encoder.feature_channel, 0.05)
-        plane = "t1w"
+        plane = "sag"
         self.encoder_name = "%s_enc"%plane
         self.classifier_name = "%s_cls"%plane
 
     def forward(self, input):
         # input: [[bz, slice, channel, h, w], []..]
         sag_img, cor_img, axi_img, t2_img, t1_img = input
-        x = t1_img
+        x = sag_img
         f = self.encoder(x, squeeze_to_vector = True, pool="max")
         pred = self.classifier(f)
         return [pred]*4
@@ -538,14 +542,14 @@ class Pretrain_Encoder(nn.Module):
     def criterion(self, pred, label, act_task = -1, final = False):
         lossfunc = F.binary_cross_entropy_with_logits
         final_pred, sag_pred, cor_pred, axi_pred = pred
-        loss = 0.0
-        pos_weights = torch.tensor(self.kargs.pos_weights).cuda()
-        for i in range(12):
-            if i==act_task or act_task==-1:
-                weight = 1.0
-            else:
-                weight = 0.1
-            loss = loss + weight*lossfunc(final_pred[:,i:i+1], label[:,i:i+1], pos_weight = pos_weights[i])
+        loss = lossfunc(final_pred, label)
+        # pos_weights = torch.tensor(self.kargs.pos_weights).cuda()
+        # for i in range(12):
+        #     if i==act_task or act_task==-1:
+        #         weight = 1.0
+        #     else:
+        #         weight = 0.1
+        #     loss = loss + weight*lossfunc(final_pred[:,i:i+1], label[:,i:i+1], pos_weight = pos_weights[i])
 
         return loss, loss.item()
 

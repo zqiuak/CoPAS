@@ -11,11 +11,9 @@ import SimpleITK as sitk
 import json
 import math
 
-from Args import Arguments
+from run.Args import args as Kargs
+from run.PathDict import dataset_dict
 
-Kargs = Arguments()
-
-DataDictPath = Kargs.DataDictPath
 INPUT_DIM = Kargs.INPUT_DIM
 MAX_PIXEL_VAL = Kargs.MAX_PIXEL_VAL
 MEAN = Kargs.MEAN
@@ -40,7 +38,6 @@ class kneeDataSetSITK(data.Dataset):
         self.dataset_name = dataset_name
         self.karg = args
         self.rebuild = rebuild
-        self.datadict_path = args.DataDictPath
         self.className = args.DiseaseList
         self.centerCrop = args.Center_Crop
         self.transform = transform
@@ -57,16 +54,15 @@ class kneeDataSetSITK(data.Dataset):
 
     def create_cls_dataset(self):
         mode = self.mode
-        with open(self.datadict_path, 'r') as f:
-            datadict = json.load(f)[self.dataset_name]
+        datadict = dataset_dict[self.dataset_name]
         try:
             self.label_path = datadict['%s_label'%mode]
             self.data_path = datadict['%s_path'%mode]
         except:
             raise Exception("There is no such dataset name: %s, mode: %s"%(self.dataset_name, mode))
         dataset_modals = datadict["modal"]
-        self.modal_list = dataset_modals        
-        # read ROI 
+        self.modal_list = dataset_modals
+        # read ROI d
         if not self.centerCrop:
             try:
                 self.ROI_path = datadict['center_file']
@@ -112,6 +108,8 @@ class kneeDataSetSITK(data.Dataset):
             if complete_flag:
                 data_list.append([pathlist, *class_labellist, id])
         # data list cache
+        if not os.path.exists(self.cache_path):
+            os.mkdir(self.cache_path)
         with open(os.path.join(self.cache_path, "datalist_cache_%s.pk"%self.mode), "wb+") as outfile:
                 pickle.dump((self.miss_file, data_list), outfile)
         return data_list
@@ -251,15 +249,18 @@ class kneeDataSetSITK(data.Dataset):
         
         return vols_new
 
-    def cache_save(self):
+    def cache_save(self, overwrite = False):
         if not os.path.exists(self.cache_path):
             os.mkdir(self.cache_path)
         data = []
         print('Saving Cache for mode %s'%self.mode)
         tbar = tqdm(self.list_org)
         for i, _ in enumerate(tbar):
+            cachefile = os.path.join(self.cache_path, 'cache_%s_%d.pk'%(self.mode,i))
+            if os.path.exists(cachefile) and not overwrite:
+                continue
             data = self.load_vols(i)
-            with open(os.path.join(self.cache_path, 'cache_%s_%d.pk'%(self.mode,i)), 'wb+') as outfile:
+            with open(cachefile, 'wb+') as outfile:
                 pickle.dump(data, outfile)
 
     def balance_cls(self, cls_indx):
@@ -358,4 +359,10 @@ class kneeDataSetSITK(data.Dataset):
         
         label_tensor = torch.FloatTensor(label)
         return vols_new, label_tensor, name
-        
+    
+
+
+
+train_ds = kneeDataSetSITK('train', dataset_name='Internal', transform=Kargs.Augmentor, aug_rate=Kargs.augrate, use_cache=Kargs.use_cache, args=Kargs)
+val_ds = kneeDataSetSITK('val', dataset_name='Internal', transform=False, use_cache=Kargs.use_cache, args=Kargs)
+test_ds_dict = {dsname:kneeDataSetSITK('test', dataset_name=dsname, transform=False, use_cache=Kargs.use_cache, args=Kargs) for dsname in Kargs.DatasetNameList}

@@ -16,44 +16,23 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import ExponentialLR
 from torch import autocast
 from torch.cuda.amp import GradScaler
+from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
 
 
-from dataloader import kneeDataSetSITK
-from utils import Aggremeter, write_metrix, evaluate_prediction
-import model
+from data.dataloader import train_ds, val_ds, test_ds_dict
+from run.utils import Aggremeter, write_metrix, evaluate_prediction
+import model.model as model
 import warnings
 warnings.simplefilter("ignore")
 
-from Args import Arguments
+from run.Args import args
 
-Net = model.Multi_view_Knee
+# Net = model.Multi_view_Knee
+Net = model.Pretrain_Encoder
 
-def parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--test', action='store_true', default=False)
-    parser.add_argument('--weight_path', type=str, default='')
-    parser.add_argument('--prefix_name', type=str, default=Net.__name__)
-    parser.add_argument('--a',type=str,default='')
-    parser.add_argument('--augment', type=int, choices=[0, 1], default=1)
-    parser.add_argument('--gamma', type=float, default=0.1)
-    parser.add_argument('--epochs', type=int, default=50)
-    parser.add_argument('--batch_size', type=int, default=1)
-    parser.add_argument('--lr', type=float, default=5e-5)
-    parser.add_argument('--flush_history', type=int, choices=[0, 1], default=0)
-    parser.add_argument('--save_model', type=int, choices=[0, 1], default=1)
-    parser.add_argument('--patience', type=int, default=500)
-    parser.add_argument('--log_every', type=int, default=100)
-    parser.add_argument('--gpu',type=str, default='2')
-    parser.add_argument('--half', action='store_true', default=False)
-    parser.add_argument('--debug', action='store_true', default=False)
-    parse_args = parser.parse_args()
-    args = Arguments()
-    args.transfer_from_argparse(parse_args)
-    return args
-
-def train_model(model, train_loader, epoch, optimizer, act_task, scalar, args:Arguments):
+def train_model(model, train_loader, epoch, optimizer, act_task, scalar, args):
     model.train()
 
     agg_meter = Aggremeter()
@@ -82,9 +61,10 @@ def train_model(model, train_loader, epoch, optimizer, act_task, scalar, args:Ar
             logits= model(images) # prediction= (final_pred, sag_pred, cor_pred, axi_pred)
             loss, loss_value = model.criterion(logits, label, act_task, final)
             loss.backward()
-            if (i+1) % args.iters_to_accumulate == 0 or (i+1) == len(train_loader):
-                optimizer.step()
-                optimizer.zero_grad()
+            optimizer.step()
+            # if (i+1) % args.iters_to_accumulate == 0 or (i+1) == len(train_loader):
+            #     optimizer.step()
+            #     optimizer.zero_grad()
         
         
         prediction = [torch.sigmoid(x).tolist() for x in logits]
@@ -92,7 +72,7 @@ def train_model(model, train_loader, epoch, optimizer, act_task, scalar, args:Ar
         agg_meter.add_pred(prediction[0], gt)
         agg_meter.add_loss(loss_value)
 
-        if args.debug:
+        if args.debug and i == 2:
             break
 
     auc_dict, acc_dict, metrix_dict = evaluate_prediction(agg_meter.pred_list, agg_meter.label_list, metrix_output=True)
@@ -104,7 +84,7 @@ def train_model(model, train_loader, epoch, optimizer, act_task, scalar, args:Ar
     train_acc_epoch = agg_meter.acc
     return train_loss_epoch, train_auc_epoch, train_acc_epoch
 
-def evaluate_model(model, val_loader, epoch, args:Arguments, mode = 'Val', save_path=None):
+def evaluate_model(model, val_loader, epoch, args, mode = 'Val', save_path=None):
     model.eval()
 
     if torch.cuda.is_available():
@@ -155,9 +135,10 @@ def evaluate_model(model, val_loader, epoch, args:Arguments, mode = 'Val', save_
 
     return val_loss_epoch, val_auc_epoch, val_acc_epoch
 
-def run(args:Arguments):
-    net = Net(backbone='ResNet3D', encoder_layer=args.model_depth, pretrain=True, kargs=args)
-    log_root_folder = args.ExpFolder+"/Exp-{}-{}-{}/".format(args.prefix_name,time.strftime("%m%d-%H%M%S"), args.a)
+def run():
+    net = Net(backbone=args.backbone, encoder_layer=args.model_depth, pretrain=True, kargs=args)
+
+    log_root_folder = args.log_folder
 
     setattr(args, "log_root_folder", log_root_folder)
     MODELSPATH = log_root_folder
@@ -184,23 +165,15 @@ def run(args:Arguments):
     fh = logging.FileHandler(os.path.join(log_root_folder, "log.txt"))
     fh.setFormatter(logging.Formatter(log_format))
     logging.getLogger().addHandler(fh)
-    logging.info("args = %s", args)
     
     # net = torch.compile(net)
 
-    augmentor = args.Augmentor
-
-    dataset_name = "Internal"
-    train_dataset = kneeDataSetSITK('train', dataset_name=dataset_name, transform=augmentor, aug_rate=2, use_cache=args.use_cache, args=args)
-
-    validation_dataset = kneeDataSetSITK('val', transform=None, use_cache=args.use_cache, args=args)
-
-    test_dataset = kneeDataSetSITK('test', transform=None, use_cache=args.use_cache, args=args)
     
     if torch.cuda.is_available():
         net = net.cuda()
 
-    optimizer = optim.SGD(params=net.parameters(), lr = args.lr, weight_decay=0.1)
+    # optimizer = optim.SGD(params=net.parameters(), lr = args.lr, weight_decay=0.1)
+    optimizer = torch.optim.Adam(params=net.parameters(), lr = args.lr)
     scheduler = ExponentialLR(optimizer=optimizer, gamma=0.9, verbose=True)
 
     best_val_loss = float('inf')
@@ -219,15 +192,13 @@ def run(args:Arguments):
 
         t_start = time.time()
         
-        train_dataset.balance_cls(act_task)
+        train_ds.balance_cls(act_task)
 
-        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=True)
-        validation_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
-        test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
+        train_loader = DataLoader(train_ds, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=True)
+        validation_loader = DataLoader(val_ds, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
+        test_loader = DataLoader(test_ds_dict['Internal'], batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
 
         scalar = GradScaler()
-        train_loss, train_auc, train_acc = train_model(
-            net, train_loader, epoch, optimizer, act_task, scalar, args)
 
         if args.data_balance:
             if act_task == 11:
@@ -235,7 +206,10 @@ def run(args:Arguments):
             else:
                 act_task = act_task+1
 
-        if epoch % 20 == 0:
+        train_loss, train_auc, train_acc = train_model(
+            net, train_loader, epoch, optimizer, act_task, scalar, args)
+
+        if epoch % 10 == 0:
             scheduler.step()
         
         with torch.no_grad():
@@ -279,8 +253,3 @@ def run(args:Arguments):
     t_end_training = time.time()
     logging.info(f'training took {t_end_training - t_start_training} s')
 
-
-if __name__ == "__main__":
-    args = parse_arguments()
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
-    run(args)
