@@ -8,7 +8,7 @@
 ## Introduction
 This is the official repository of 
 
-**CoPAS: learning Co-Plane Attention across MRI Sequences for diagnosing twelve types of knee abnormalities: A multi-center retrospective study** 
+**Learning co-plane attention across MRI sequences for diagnosing twelve types of knee abnormalities** 
 
 by
 *Zelin Qiu, Zhuoyao Xie, Yanwen Li, Huangjing Lin, Qiang Ye, Menghong Wang, Shisi Li, Yinghua Zhao, and Hao Chen*
@@ -58,3 +58,8 @@ If you have any special requests, please send a email to Zelin Qiu (zqiuak@conne
 
 This project is covered under the **Apache 2.0 License**.
 
+## Cite
+
+```
+Qiu, Z., Xie, Z., Lin, H. et al. Learning co-plane attention across MRI sequences for diagnosing twelve types of knee abnormalities. Nat Commun 15, 7637 (2024).
+```
