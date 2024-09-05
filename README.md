@@ -54,12 +54,21 @@ We have prepared 50 sample data for test, click [here](https://drive.google.com/
 
 If you have any special requests, please send a email to Zelin Qiu (zqiuak@connect.ust.hk).
 
-## License
+## License & Citation
 
 This project is covered under the **Apache 2.0 License**.
 
-## Cite
+If you find this work useful, please cite our paper:
 
 ```
-Qiu, Z., Xie, Z., Lin, H. et al. Learning co-plane attention across MRI sequences for diagnosing twelve types of knee abnormalities. Nat Commun 15, 7637 (2024).
+@article{qiu2024learning,
+  title={Learning co-plane attention across MRI sequences for diagnosing twelve types of knee abnormalities},
+  author={Qiu, Zelin and Xie, Zhuoyao and Lin, Huangjing and Li, Yanwen and Ye, Qiang and Wang, Menghong and Li, Shisi and Zhao, Yinghua and Chen, Hao},
+  journal={Nature Communications},
+  volume={15},
+  number={1},
+  pages={7637},
+  year={2024},
+  publisher={Nature Publishing Group UK London}
+}
 ```
