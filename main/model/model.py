@@ -153,7 +153,7 @@ class Co_Plane_Att(nn.Module):
 
 class Cross_Modal_Att(nn.Module):
     def __init__(self, feature_channel, kargs = args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self.transform_matrix = nn.Linear(2*feature_channel, feature_channel)
         self.norm = nn.BatchNorm1d(num_features=feature_channel)
         ini_weights([self.transform_matrix, self.norm])

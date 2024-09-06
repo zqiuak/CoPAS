@@ -29,8 +29,8 @@ warnings.simplefilter("ignore")
 
 from run.Args import args
 
-# Net = model.Multi_view_Knee
-Net = model.Pretrain_Encoder
+Net = model.Multi_view_Knee
+# Net = model.Pretrain_Encoder
 
 def train_model(model, train_loader, epoch, optimizer, act_task, scalar, args):
     model.train()
@@ -76,7 +76,8 @@ def train_model(model, train_loader, epoch, optimizer, act_task, scalar, args):
             break
 
     auc_dict, acc_dict, metrix_dict = evaluate_prediction(agg_meter.pred_list, agg_meter.label_list, metrix_output=True)
-    write_metrix(metrix_dict, args.log_root_folder, "train_final", args)
+    if args.write_metrix:
+        write_metrix(metrix_dict, args.log_root_folder, "train_final", args)
 
     agg_meter.add_metrix(list(acc_dict.values()), list(auc_dict.values()))
     train_loss_epoch = agg_meter.loss
@@ -131,7 +132,8 @@ def evaluate_model(model, val_loader, epoch, args, mode = 'Val', save_path=None)
 
     with open(os.path.join(save_path, 'results%s.pk'%mode),'wb+') as outfile:
         pickle.dump(agg_meter, outfile)
-    write_metrix([fin_metrix_dict, sag_metrix_dict, cor_metrix_dict, axi_metrix_dict], save_path, [mode + "fin", "sag", "cor", "axi"], args)
+    if args.write_metrix:
+        write_metrix([fin_metrix_dict, sag_metrix_dict, cor_metrix_dict, axi_metrix_dict], save_path, [mode + "fin", "sag", "cor", "axi"], args)
 
     return val_loss_epoch, val_auc_epoch, val_acc_epoch
 

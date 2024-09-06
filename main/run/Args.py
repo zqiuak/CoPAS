@@ -59,13 +59,14 @@ class Arguments():
         self.lr = 5e-5
         self.Augmentor = True
         self.augrate = 4
-        self.use_cache = True
+        self.use_cache = False
         self.num_workers = 7
         self.iters_to_accumulate = 1 # accumulate gradient for how many batches
         self.data_balance = False
         self.debug = False
 
         # analysis args
+        self.write_metrix = False
         self.show_patch_sample = False
 
 

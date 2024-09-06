@@ -103,7 +103,7 @@ def show_CAM(net, dataset):
             Show_Samples(input_image, title="task_%d_slice_%d_origin.png"%(task, slice_indx), save_path='./')
         # cam_map.shape()
 
-def val_with_save(net):
+def val_with_save(net, test_dataset):
     log_root_folder = args.log_folder
     if args.flush_history == 1:
         objects = os.listdir(log_root_folder)
@@ -129,11 +129,11 @@ def val_with_save(net):
     fh.setFormatter(logging.Formatter(log_format))
     logging.getLogger().addHandler(fh)
     logging.info("args = %s", args)
-    writer = SummaryWriter(os.path.join(log_root_folder), 'TensorBoard')
 
-    test_dataset = kneeDataSetSITK(dataset_name="Internal", use_cache=False, args=args)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=16, num_workers=16, shuffle=False)
 
+    if args.half:
+        net.half()
     net.eval()
 
     if torch.cuda.is_available():
@@ -148,7 +148,7 @@ def val_with_save(net):
     delta = t_end - t_start
 
     logging.info(
-        "loss {0} | auc {1} | acc {2}elapsed time {9} s".format(
+        "loss {0} | auc {1} | acc {2}elapsed time {3} s".format(
             test_loss, test_auc, test_acc, delta))
 
     logging.info('-' * 50)
